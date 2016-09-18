@@ -951,7 +951,7 @@ void loop ()
     {  // for testing and debug I sometimes want the alarms more frequent than 1 per minute.
       Alarmsecond = now.second()+SampleIntSeconds;
       if (Alarmsecond >59){
-        Alarmsecond =0;
+         Alarmsecond = Alarmsecond-60; //small bug, not rolling over correctly
         Alarmminute = Alarmminute+1;  
         if (Alarmminute > 59) 
         {  //error catch - if alarmminute=60 the interrupt never triggers due to rollover!
