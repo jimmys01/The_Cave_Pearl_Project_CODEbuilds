@@ -914,17 +914,11 @@ void loop ()
 //------------------------------------------------------------------------
 
     // setNextAlarmTime();
-    Alarmhour = now.hour(); 
-    Alarmminute = now.minute()+SampleIntervalMinutes;
-    Alarmday = now.day();
+    
+
     if (SampleIntervalMinutes > 0) //then our alarm is in (SampleInterval) minutes
     {
-      if (Alarmminute > 59) {  //error catch - if alarmminute=60 the interrupt never triggers due to rollover!
-        Alarmminute =0; 
-        Alarmhour = Alarmhour+1; 
-        if (Alarmhour > 23) {
-          Alarmhour =0;
-          
+      	DateTime nextAlarm = now + TimeSpan(0, 0, SampleIntervalMinutes, 0);
           // CAN place your ONCE-PER-DAY events in the code right here!
              
              #ifdef ADXL345_ISON  
@@ -941,26 +935,16 @@ void loop ()
              file.println(CycleTimeStamp);
              file.close();
              # endif
-        }
-      }
-      RTC.setAlarm1Simple(Alarmhour, Alarmminute);
+        
+      
+      RTC.setAlarm1Simple(nextAlarm.hour(), nextAlarm.minute());
     }
     
     else
     
     {  // for testing and debug I sometimes want the alarms more frequent than 1 per minute.
-      Alarmsecond = now.second()+SampleIntSeconds;
-      if (Alarmsecond >59){
-        Alarmsecond =0;
-        Alarmminute = Alarmminute+1;  
-        if (Alarmminute > 59) 
-        {  //error catch - if alarmminute=60 the interrupt never triggers due to rollover!
-          Alarmminute =0; 
-          Alarmhour = Alarmhour+1; 
-          if (Alarmhour > 23) { //uhoh a day rollover, but we dont know the month..so we dont know the next day number?
-            Alarmhour =0;
-            
-             // CAN place ONCE-PER-DAY events in the code right here!
+     DateTime nextAlarm = now + TimeSpan(0, 0, 0, SampleIntSeconds);
+                  // CAN place ONCE-PER-DAY events in the code right here!
              
              #ifdef ADXL345_ISON  
              readAdxl345(); //I read the accelerometer xyz once per day to make sure the drip sensor has not moved or fallen over
@@ -976,30 +960,8 @@ void loop ()
              file.println(CycleTimeStamp);
              file.close();
              # endif
-             
-             // sleep for a total of 64 seconds (12 x 8s) so the day "rolls over" while we are in this loop
-             // yes I knwo this causes a gap in the timing, but I only use sub minute sampling for debug anyway.
-             //int j;
-             //for (j = 0; j <8; j++)
-             //{
-             /* //setWTD_8s();
-             //sleepNwait4WDT(); */
-             //LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);  //two lines above replaced by this
-             //}
-            //while more elegant the sleeping delay loop did not seem to work, so I am just going with the dumb method
-            delay(327670);// Just wait for a 1.5 minutes to pass..
-            delay(327670);
-            delay(327670); 
-            
-            DateTime now = RTC.now();  //now set the alarm again with the day already rolled over
-            Alarmday = now.day();
-            Alarmhour = now.hour(); 
-            Alarmminute = now.minute();
-            Alarmsecond = now.second()+SampleIntSeconds; 
-          }
-        }
-      }
-      RTC.setA1Time(Alarmday, Alarmhour, Alarmminute, Alarmsecond, 0b00001000, false, false, false);  
+                       }
+      RTC.setA1Time(nextAlarm.day(), nextAlarm.hour(), nextAlarm.minute(), nextAlarm.second(), 0b00001000, false, false, false);  
       //The variables ALRM1_SET bits and ALRM2_SET are 0b1000 and 0b111 respectively.
       //setA1Time(byte A1Day, byte A1Hour, byte A1Minute, byte A1Second, byte AlarmBits, bool A1Dy, bool A1h12, bool A1PM)
     }
